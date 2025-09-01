@@ -22,7 +22,7 @@
 </svelte:head>
 
 <div class={styles.uploadContainer}>
-	<h1 class={styles.header}>Upload Your Workout Summary</h1>
+	<h1 class={styles.header}>Upload Your<br /> Workout Summary</h1>
 
 	<div
 		class={styles.uploadForm}
@@ -31,9 +31,7 @@
 		role="button"
 		tabindex="0"
 	>
-		<div class={styles.uploadPlaceholder}>
-			Upload Images
-		</div>
+		<div class={styles.uploadPlaceholder}></div>
 	</div>
 
 	<p class={styles.footer}>Not affiliated with Fitbod.me</p>

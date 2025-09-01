@@ -16,12 +16,17 @@
 }
 
 .header {
-  color: $color-text-primary;
-  font-size: $font-size-4xl;
-  font-weight: $font-weight-semibold;
-  margin-bottom: $spacing-2xl;
+  font-family: $font-family-primary;
+  margin: 0;
   text-align: center;
-  letter-spacing: -0.5px;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 2.9rem;
+  letter-spacing: 0;
+  line-height: 120%;
+  color: rgb(247, 142, 102);
+  padding: 1rem 0 3rem;
+
 }
 
 .uploadForm {
@@ -56,31 +61,4 @@
   margin-top: $spacing-2xl;
   text-align: center;
   opacity: 0.7;
-}
-
-// Responsive adjustments
-@media (max-width: $breakpoint-md) {
-  .uploadContainer {
-    padding: $spacing-md;
-  }
-
-  .uploadForm {
-    width: $upload-form-size-mobile;
-    height: $upload-form-size-mobile;
-    max-width: 400px;
-    max-height: 400px;
-  }
-
-  .header {
-    font-size: $font-size-2xl;
-    margin-bottom: $spacing-xl;
-  }
-
-  .uploadPlaceholder {
-    font-size: $font-size-base;
-
-    &::before {
-      font-size: $font-size-2xl;
-    }
-  }
 }
