@@ -101,6 +101,46 @@
   border-left: 3px solid $color-accent;
 }
 
+.fileDetail {
+  background: $color-bg-tertiary;
+  color: $color-text-secondary;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  margin-top: $spacing-xs;
+}
+
+.resultText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-md;
+  width: 100%;
+}
+
+.successText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  color: $color-success;
+}
+
+.errorText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  color: $color-danger;
+}
+
+.fileDetails {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
+}
+
 .footer {
   color: $color-text-secondary;
   font-size: $font-size-sm;

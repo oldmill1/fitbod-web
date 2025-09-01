@@ -5,6 +5,40 @@
 	let isDragOver = false;
 	let selectedFiles: File[] = [];
 	let fileInput: HTMLInputElement;
+	let uploading = false;
+	let uploadResult: any = null;
+
+	// Upload files to backend
+	async function uploadFiles(files: File[]) {
+		if (files.length === 0) return;
+
+		uploading = true;
+		uploadResult = null;
+
+		try {
+			const formData = new FormData();
+			files.forEach(file => {
+				formData.append('files', file);
+			});
+
+			const response = await fetch('/api/upload', {
+				method: 'POST',
+				body: formData
+			});
+
+			uploadResult = await response.json();
+			console.log('Upload response:', uploadResult);
+
+		} catch (error) {
+			console.error('Upload failed:', error);
+			uploadResult = {
+				success: false,
+				error: 'Upload failed: ' + error.message
+			};
+		} finally {
+			uploading = false;
+		}
+	}
 
 	// Handle file selection via click
 	function handleClick() {
@@ -19,6 +53,9 @@
 				file.type.startsWith('image/')
 			);
 			console.log('Files selected:', selectedFiles);
+			if (selectedFiles.length > 0) {
+				uploadFiles(selectedFiles);
+			}
 		}
 	}
 
@@ -45,6 +82,9 @@
 				file.type.startsWith('image/')
 			);
 			console.log('Files dropped:', selectedFiles);
+			if (selectedFiles.length > 0) {
+				uploadFiles(selectedFiles);
+			}
 		}
 	}
 
@@ -76,7 +116,33 @@
 		tabindex="0"
 	>
 		<div class={styles.uploadPlaceholder}>
-			{#if selectedFiles.length > 0}
+			{#if uploading}
+				<div class={styles.placeholderText}>
+					<div class={styles.uploadIcon}>⏳</div>
+					<div>Uploading files...</div>
+				</div>
+			{:else if uploadResult}
+				<div class={styles.resultText}>
+					{#if uploadResult.success}
+						<div class={styles.successText}>
+							<div class={styles.uploadIcon}>✅</div>
+							<div>{uploadResult.message}</div>
+							{#if uploadResult.files}
+								<div class={styles.fileDetails}>
+									{#each uploadResult.files as file}
+										<div class={styles.fileDetail}>{file.message}</div>
+									{/each}
+								</div>
+							{/if}
+						</div>
+					{:else}
+						<div class={styles.errorText}>
+							<div class={styles.uploadIcon}>❌</div>
+							<div>{uploadResult.error}</div>
+						</div>
+					{/if}
+				</div>
+			{:else if selectedFiles.length > 0}
 				<div class={styles.fileList}>
 					{#each selectedFiles as file}
 						<div class={styles.fileName}>{file.name}</div>
