@@ -1,0 +1,22 @@
+# Site settings
+title: Fitbod.me Web App
+description: Companion web app for Fitbod.me
+
+# Jekyll theme - perfect for your retro terminal aesthetic
+#theme: jekyll-theme-hacker
+
+# https://github.com/pages-themes/hacker
+remote_theme: pages-themes/hacker@v0.2.0
+
+# GitHub Pages configuration
+url: "https://oldmill1.github.io"
+baseurl: "/douglas"
+
+# Markdown processor
+markdown: kramdown
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-remote-theme
