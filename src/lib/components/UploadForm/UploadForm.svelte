@@ -27,7 +27,48 @@
 			});
 
 			uploadResult = await response.json();
-			console.log('Upload response:', uploadResult);
+
+			// Log the full response
+			console.log('=== UPLOAD RESPONSE ===');
+			console.log('Full response:', uploadResult);
+
+			// Log each file's analysis
+			if (uploadResult.files) {
+				uploadResult.files.forEach((file: any, index: number) => {
+					console.log(`=== FILE ${index + 1}: ${file.name} ===`);
+					console.log('Analysis status:', file.status);
+					console.log('Message:', file.message);
+
+					if (file.analysis) {
+						console.log('=== AI ANALYSIS DATA ===');
+						console.log('Parsed analysis:', file.analysis);
+
+						// Log specific workout data if available
+						if (file.analysis.date) {
+							console.log('📅 Date:', file.analysis.date);
+						}
+						if (file.analysis.duration) {
+							console.log('⏱️ Duration:', file.analysis.duration);
+						}
+						if (file.analysis.exercises) {
+							console.log('💪 Exercises found:', file.analysis.exercises.length);
+							file.analysis.exercises.forEach((exercise: any, exIndex: number) => {
+								console.log(`  Exercise ${exIndex + 1}:`, exercise.name);
+								console.log(`    Highest Weight: ${exercise.highestWeight}`);
+								console.log(`    Volume: ${exercise.volume}`);
+								console.log(`    Estimated Strength: ${exercise.estimatedStrength}`);
+							});
+						}
+					}
+
+					if (file.rawResponse) {
+						console.log('=== RAW AI RESPONSE ===');
+						console.log(file.rawResponse);
+					}
+
+					console.log('========================');
+				});
+			}
 
 		} catch (error) {
 			console.error('Upload failed:', error);
@@ -127,6 +168,9 @@
 						<div class={styles.successText}>
 							<div class={styles.uploadIcon}>✅</div>
 							<div>{uploadResult.message}</div>
+							<div style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.8;">
+								Check browser console for detailed analysis results!
+							</div>
 							{#if uploadResult.files}
 								<div class={styles.fileDetails}>
 									{#each uploadResult.files as file}
