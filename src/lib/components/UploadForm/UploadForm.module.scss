@@ -28,8 +28,7 @@
   width: $upload-form-size;
   height: $upload-form-size;
   background: $color-bg-secondary;
-  border: 2px dashed $color-border-primary;
-  border-radius: $radius-xl;
+  border-radius: $radius-2xl;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -38,8 +37,6 @@
   transition: all $transition-normal;
 
   &:hover {
-    background: $color-bg-tertiary;
-    border-color: $color-border-secondary;
     transform: translateY(-2px);
   }
 }
@@ -50,13 +47,6 @@
   text-align: center;
   user-select: none;
   font-weight: $font-weight-medium;
-
-  &::before {
-    content: "📱";
-    display: block;
-    font-size: $font-size-4xl * 1.5;
-    margin-bottom: $spacing-md;
-  }
 }
 
 .footer {
