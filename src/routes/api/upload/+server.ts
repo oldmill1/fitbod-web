@@ -1,6 +1,90 @@
 // src/routes/api/upload/+server.ts
 import { json } from '@sveltejs/kit';
+import { OPENAI_API_KEY, MODEL } from '$env/static/private';
+import OpenAI from 'openai';
 import type { RequestHandler } from './$types';
+
+const openai = new OpenAI({
+	apiKey: OPENAI_API_KEY
+});
+
+async function analyzeWorkoutImage(imageBuffer: ArrayBuffer, fileName: string) {
+	try {
+		// Convert ArrayBuffer to base64 - compatible with both Node.js and edge environments
+		const bytes = new Uint8Array(imageBuffer);
+		const base64Image = btoa(String.fromCharCode(...bytes));
+
+		const response = await openai.chat.completions.create({
+			model: MODEL || 'gpt-4o',
+			messages: [
+				{
+					role: 'user',
+					content: [
+						{
+							type: 'text',
+							text: `Analyze this Fitbod workout summary image and extract the following specific data in exact JSON format:
+
+							{
+								"date": "exact date from top (e.g., 8/15/25)",
+								"duration": "exact duration from top (e.g., 1h4m)", 
+								"exercises": [
+									{
+										"name": "exact exercise name (e.g., Dumbbell Rear Delt Raise)",
+										"highestWeight": "exact value under HIGHEST WEIGHT (e.g., 20 lb)",
+										"volume": "exact value under VOLUME (e.g., 4,000 lb)",
+										"estimatedStrength": "exact value under ESTIMATED STRENGTH (e.g., 31.8 lb in 1 rep)"
+									}
+								]
+							}
+
+							IMPORTANT:
+							- Extract the date and duration from the very top of the image (format like "8/15/25 • 1h4m")
+							- For each exercise, get the exact text under each section: HIGHEST WEIGHT, VOLUME, ESTIMATED STRENGTH
+							- Copy the values exactly as shown, including units (lb, kg, etc.)
+							- If any value is not clearly visible, use "not visible" instead of guessing
+							- Maintain the exact spelling and formatting of exercise names`
+						},
+						{
+							type: 'image_url',
+							image_url: {
+								url: `data:image/jpeg;base64,${base64Image}`
+							}
+						}
+					]
+				}
+			],
+			max_tokens: 1500
+		});
+
+		const analysisText = response.choices[0]?.message?.content;
+
+		// Try to parse JSON from response
+		let parsedAnalysis;
+		try {
+			parsedAnalysis = JSON.parse(analysisText || '{}');
+		} catch {
+			// If parsing fails, return the raw text
+			parsedAnalysis = {
+				rawAnalysis: analysisText,
+				error: 'Could not parse structured data'
+			};
+		}
+
+		return {
+			success: true,
+			fileName,
+			analysis: parsedAnalysis,
+			rawResponse: analysisText
+		};
+	} catch (error) {
+		console.error('OpenAI analysis error:', error);
+		return {
+			success: false,
+			fileName,
+			error: `Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+		};
+	}
+}
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
@@ -20,31 +104,47 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ success: false, error: 'No valid image files provided' }, { status: 400 });
 		}
 
-		// For now, just return the file info
-		// Later we'll add actual image processing logic here
-		const processedFiles = imageFiles.map((file) => {
+		// Process each image with OpenAI
+		const analysisResults = [];
+
+		for (const file of imageFiles) {
+			const imageBuffer = await file.arrayBuffer();
+			const result = await analyzeWorkoutImage(imageBuffer, file.name);
+			analysisResults.push(result);
+		}
+
+		// Prepare response
+		const processedFiles = analysisResults.map((result) => {
 			return {
-				name: file.name,
-				size: file.size,
-				type: file.type,
+				name: result.fileName,
+				size: imageFiles.find((f) => f.name === result.fileName)?.size || 0,
+				type: imageFiles.find((f) => f.name === result.fileName)?.type || 'image/*',
 				receivedAt: new Date().toISOString(),
-				status: 'received',
-				message: `Successfully received ${file.name} (${(file.size / 1024).toFixed(1)} KB)`
+				status: result.success ? 'analyzed' : 'error',
+				message: result.success ? `AI analysis completed for ${result.fileName}` : result.error,
+				analysis: result.success ? result.analysis : null,
+				rawResponse: result.success ? result.rawResponse : null
 			};
 		});
 
 		console.log(
-			'Processed files:',
+			'Analysis completed for files:',
 			processedFiles.map((f) => f.name)
 		);
 
 		return json({
 			success: true,
-			message: `Successfully received ${processedFiles.length} image(s)`,
+			message: `Successfully analyzed ${processedFiles.length} image(s) with AI`,
 			files: processedFiles
 		});
 	} catch (error) {
-		console.error('Upload error:', error);
-		return json({ success: false, error: 'Failed to process upload' }, { status: 500 });
+		console.error('Upload/Analysis error:', error);
+		return json(
+			{
+				success: false,
+				error: `Failed to process upload: ${error instanceof Error ? error.message : 'Unknown error'}`
+			},
+			{ status: 500 }
+		);
 	}
 };
