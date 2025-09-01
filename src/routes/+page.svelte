@@ -1,2 +1,6 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<!-- src/routes/+page.svelte - +page.svelte -->
+<script lang="ts">
+	import UploadForm from '$lib/components/UploadForm/UploadForm.svelte';
+</script>
+
+<UploadForm />
