@@ -80,6 +80,15 @@
   font-size: $font-size-sm;
   color: $color-text-tertiary;
   font-weight: $font-weight-regular;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.uploadHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  font-style: italic;
+  margin-top: $spacing-sm;
 }
 
 .fileList {
@@ -192,17 +201,87 @@
   color: $color-text-primary;
 }
 
-.exercisesList {
-  margin-bottom: $spacing-lg;
+// Muscle Groups Section
+.muscleGroupsSection {
+  margin-bottom: $spacing-xl;
 }
 
-.exercisesTitle {
+.sectionTitle {
   font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
   margin: 0 0 $spacing-md 0;
   padding-bottom: $spacing-sm;
   border-bottom: 1px solid $color-border-primary;
+}
+
+.muscleGroupsCard {
+  background: $color-bg-tertiary;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  border-left: 4px solid rgb(247, 142, 102);
+}
+
+.muscleGroups {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-md;
+}
+
+.muscleGroupsLabel {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.muscleGroupsList {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: rgb(247, 142, 102);
+}
+
+.workoutStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.workoutStat {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  background: rgba($color-bg-primary, 0.5);
+  padding: $spacing-sm;
+  border-radius: $radius-sm;
+}
+
+.muscleGroupExercises {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.exercisesLabel {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.exercisesList {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+// Exercises Section
+.exercisesSection {
+  margin-bottom: $spacing-lg;
 }
 
 .exerciseCard {
@@ -244,6 +323,23 @@
   font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
+}
+
+// Source Files
+.sourceFiles {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border-primary;
+}
+
+.sourceFile {
+  background: $color-bg-primary;
+  color: $color-text-secondary;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
 }
 
 // Error Card

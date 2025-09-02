@@ -2,15 +2,43 @@
 <script lang="ts">
 	import styles from './UploadForm.module.scss';
 
+	// Type definitions
+	interface ProcessedFile {
+		name: string;
+		size: number;
+		type: string;
+		imageType: 'workout_summary' | 'muscle_groups';
+		receivedAt: string;
+		status: string;
+		message: string;
+		analysis: any;
+		rawResponse: string;
+	}
+
+	interface UploadResult {
+		success: boolean;
+		message?: string;
+		error?: string;
+		files?: ProcessedFile[];
+	}
+
 	let isDragOver = false;
 	let selectedFiles: File[] = [];
 	let fileInput: HTMLInputElement;
 	let uploading = false;
-	let uploadResult: any = null;
+	let uploadResult: UploadResult | null = null;
 
 	// Upload files to backend
 	async function uploadFiles(files: File[]) {
 		if (files.length === 0) return;
+
+		if (files.length !== 2) {
+			uploadResult = {
+				success: false,
+				error: 'Please upload exactly 2 images: one workout summary and one muscle group summary'
+			};
+			return;
+		}
 
 		uploading = true;
 		uploadResult = null;
@@ -34,7 +62,7 @@
 
 			if (uploadResult.files) {
 				uploadResult.files.forEach((file: any, index: number) => {
-					console.log(`=== FILE ${index + 1}: ${file.name} ===`);
+					console.log(`=== FILE ${index + 1}: ${file.name} (${file.imageType}) ===`);
 					console.log('Analysis status:', file.status);
 					console.log('Message:', file.message);
 
@@ -50,7 +78,7 @@
 			console.error('Upload failed:', error);
 			uploadResult = {
 				success: false,
-				error: 'Upload failed: ' + error.message
+				error: 'Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error')
 			};
 		} finally {
 			uploading = false;
@@ -129,72 +157,106 @@
 	<h1 class={styles.header}>Upload Your<br /> Workout Summary</h1>
 
 	{#if uploadResult && uploadResult.success && uploadResult.files}
+		{@const workoutData = uploadResult.files.find((f: ProcessedFile) => f.imageType === 'workout_summary')}
+		{@const muscleData = uploadResult.files.find((f: ProcessedFile) => f.imageType === 'muscle_groups')}
+
 		<!-- Display Analysis Results -->
 		<div class={styles.analysisResults}>
-			{#each uploadResult.files as file}
-				{#if file.analysis && !file.analysis.error}
-					<div class={styles.workoutCard}>
-						<div class={styles.workoutHeader}>
-							<h2 class={styles.workoutTitle}>Workout Analysis</h2>
-							<div class={styles.workoutMeta}>
-								{#if file.analysis.date}
-									<span class={styles.workoutDate}>📅 {file.analysis.date}</span>
-								{/if}
-								{#if file.analysis.duration}
-									<span class={styles.workoutDuration}>⏱️ {file.analysis.duration}</span>
-								{/if}
-							</div>
-						</div>
-
-						{#if file.analysis.exercises && file.analysis.exercises.length > 0}
-							<div class={styles.exercisesList}>
-								<h3 class={styles.exercisesTitle}>Exercises ({file.analysis.exercises.length})</h3>
-								{#each file.analysis.exercises as exercise, idx}
-									<div class={styles.exerciseCard}>
-										<div class={styles.exerciseName}>{exercise.name}</div>
-										<div class={styles.exerciseStats}>
-											{#if exercise.highestWeight && exercise.highestWeight !== 'not visible'}
-												<div class={styles.exerciseStat}>
-													<span class={styles.statLabel}>Highest Weight</span>
-													<span class={styles.statValue}>{exercise.highestWeight}</span>
-												</div>
-											{/if}
-											{#if exercise.volume && exercise.volume !== 'not visible'}
-												<div class={styles.exerciseStat}>
-													<span class={styles.statLabel}>Volume</span>
-													<span class={styles.statValue}>{exercise.volume}</span>
-												</div>
-											{/if}
-											{#if exercise.estimatedStrength && exercise.estimatedStrength !== 'not visible'}
-												<div class={styles.exerciseStat}>
-													<span class={styles.statLabel}>Est. Strength</span>
-													<span class={styles.statValue}>{exercise.estimatedStrength}</span>
-												</div>
-											{/if}
-										</div>
-									</div>
-								{/each}
-							</div>
+			<div class={styles.workoutCard}>
+				<!-- Workout Header with basic info -->
+				<div class={styles.workoutHeader}>
+					<h2 class={styles.workoutTitle}>Complete Workout Analysis</h2>
+					<div class={styles.workoutMeta}>
+						{#if workoutData?.analysis?.date}
+							<span class={styles.workoutDate}>📅 {workoutData.analysis.date}</span>
 						{/if}
-
-						<div class={styles.fileName}>📄 {file.name}</div>
+						{#if workoutData?.analysis?.duration}
+							<span class={styles.workoutDuration}>⏱️ {workoutData.analysis.duration}</span>
+						{/if}
 					</div>
-				{:else}
-					<!-- Error display for failed analysis -->
-					<div class={styles.errorCard}>
-						<div class={styles.errorIcon}>❌</div>
-						<div class={styles.errorTitle}>Analysis Failed</div>
-						<div class={styles.errorMessage}>
-							{file.message || 'Could not analyze this workout image'}
+				</div>
+
+				<!-- Muscle Groups Summary -->
+				{#if muscleData?.analysis && !muscleData.analysis.error}
+					<div class={styles.muscleGroupsSection}>
+						<h3 class={styles.sectionTitle}>Muscle Groups Targeted</h3>
+						<div class={styles.muscleGroupsCard}>
+							{#if muscleData.analysis.muscleGroups}
+								<div class={styles.muscleGroups}>
+									<span class={styles.muscleGroupsLabel}>Primary Focus:</span>
+									<span class={styles.muscleGroupsList}>{muscleData.analysis.muscleGroups}</span>
+								</div>
+							{/if}
+
+							<div class={styles.workoutStats}>
+								{#if muscleData.analysis.calories}
+									<div class={styles.workoutStat}>
+										<span class={styles.statLabel}>Calories</span>
+										<span
+											class={styles.statValue}>{muscleData.analysis.calories} {muscleData.analysis.caloriesUnit || ''}</span>
+									</div>
+								{/if}
+								{#if muscleData.analysis.volume}
+									<div class={styles.workoutStat}>
+										<span class={styles.statLabel}>Total Volume</span>
+										<span
+											class={styles.statValue}>{muscleData.analysis.volume} {muscleData.analysis.volumeUnit || ''}</span>
+									</div>
+								{/if}
+							</div>
+
+							{#if muscleData.analysis.exercises}
+								<div class={styles.muscleGroupExercises}>
+									<span class={styles.exercisesLabel}>Main Exercises:</span>
+									<span class={styles.exercisesList}>{muscleData.analysis.exercises}</span>
+								</div>
+							{/if}
 						</div>
-						<div class={styles.fileName}>📄 {file.name}</div>
 					</div>
 				{/if}
-			{/each}
+
+				<!-- Detailed Exercise Breakdown -->
+				{#if workoutData?.analysis?.exercises && workoutData.analysis.exercises.length > 0}
+					<div class={styles.exercisesSection}>
+						<h3 class={styles.sectionTitle}>Exercise Details ({workoutData.analysis.exercises.length})</h3>
+						{#each workoutData.analysis.exercises as exercise, idx}
+							<div class={styles.exerciseCard}>
+								<div class={styles.exerciseName}>{exercise.name}</div>
+								<div class={styles.exerciseStats}>
+									{#if exercise.highestWeight && exercise.highestWeight !== 'not visible'}
+										<div class={styles.exerciseStat}>
+											<span class={styles.statLabel}>Highest Weight</span>
+											<span class={styles.statValue}>{exercise.highestWeight}</span>
+										</div>
+									{/if}
+									{#if exercise.volume && exercise.volume !== 'not visible'}
+										<div class={styles.exerciseStat}>
+											<span class={styles.statLabel}>Volume</span>
+											<span class={styles.statValue}>{exercise.volume}</span>
+										</div>
+									{/if}
+									{#if exercise.estimatedStrength && exercise.estimatedStrength !== 'not visible'}
+										<div class={styles.exerciseStat}>
+											<span class={styles.statLabel}>Est. Strength</span>
+											<span class={styles.statValue}>{exercise.estimatedStrength}</span>
+										</div>
+									{/if}
+								</div>
+							</div>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Source Files Info -->
+				<div class={styles.sourceFiles}>
+					<div class={styles.sourceFile}>📄 {workoutData?.name || 'Workout Summary'}</div>
+					<div class={styles.sourceFile}>📄 {muscleData?.name || 'Muscle Groups'}</div>
+				</div>
+			</div>
 
 			<!-- Reset button -->
 			<button class={styles.resetButton} on:click={resetUpload}>
-				Upload Another Workout
+				Analyze Another Workout
 			</button>
 		</div>
 	{:else}
@@ -231,8 +293,12 @@
 				{:else}
 					<div class={styles.placeholderText}>
 						<div class={styles.uploadIcon}>📸</div>
-						<div>Drop images here or click to select</div>
-						<div class={styles.supportedFormats}>PNG, JPG, JPEG supported</div>
+						<div>Drop <strong>2 images</strong> here or click to select</div>
+						<div class={styles.supportedFormats}>
+							1. Workout Summary (with exercise details)<br />
+							2. Muscle Group Summary (with muscle illustrations)
+						</div>
+						<div class={styles.uploadHint}>Both images are required for complete analysis</div>
 					</div>
 				{/if}
 			</div>
