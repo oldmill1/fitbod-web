@@ -8,6 +8,47 @@ const openai = new OpenAI({
 	apiKey: OPENAI_API_KEY
 });
 
+// Helper function to manually extract data from AI response if JSON parsing fails
+function extractBasicData(text: string) {
+	const extracted: any = {};
+
+	// Extract date
+	const dateMatch = text.match(/"date":\s*"([^"]+)"/);
+	if (dateMatch) extracted.date = dateMatch[1];
+
+	// Extract duration
+	const durationMatch = text.match(/"duration":\s*"([^"]+)"/);
+	if (durationMatch) extracted.duration = durationMatch[1];
+
+	// Extract exercises (basic pattern matching)
+	const exercises: any[] = [];
+	const exerciseMatches = text.match(
+		/"name":\s*"([^"]+)"[\s\S]*?"highestWeight":\s*"([^"]+)"[\s\S]*?"volume":\s*"([^"]+)"[\s\S]*?"estimatedStrength":\s*"([^"]+)"/g
+	);
+
+	if (exerciseMatches) {
+		exerciseMatches.forEach((match) => {
+			const parts = match.match(
+				/"name":\s*"([^"]+)"[\s\S]*?"highestWeight":\s*"([^"]+)"[\s\S]*?"volume":\s*"([^"]+)"[\s\S]*?"estimatedStrength":\s*"([^"]+)"/
+			);
+			if (parts) {
+				exercises.push({
+					name: parts[1],
+					highestWeight: parts[2],
+					volume: parts[3],
+					estimatedStrength: parts[4]
+				});
+			}
+		});
+	}
+
+	if (exercises.length > 0) {
+		extracted.exercises = exercises;
+	}
+
+	return extracted;
+}
+
 async function analyzeWorkoutImage(imageBuffer: ArrayBuffer, fileName: string) {
 	try {
 		// Convert ArrayBuffer to base64 - compatible with both Node.js and edge environments
@@ -58,16 +99,29 @@ async function analyzeWorkoutImage(imageBuffer: ArrayBuffer, fileName: string) {
 
 		const analysisText = response.choices[0]?.message?.content;
 
-		// Try to parse JSON from response
+		// Try to extract and parse JSON from response
 		let parsedAnalysis;
 		try {
+			// First try direct parsing
 			parsedAnalysis = JSON.parse(analysisText || '{}');
 		} catch {
-			// If parsing fails, return the raw text
-			parsedAnalysis = {
-				rawAnalysis: analysisText,
-				error: 'Could not parse structured data'
-			};
+			// If that fails, try to extract JSON from the response
+			try {
+				const jsonMatch = analysisText?.match(/\{[\s\S]*\}/);
+				if (jsonMatch) {
+					parsedAnalysis = JSON.parse(jsonMatch[0]);
+				} else {
+					throw new Error('No JSON found');
+				}
+			} catch {
+				// If all parsing fails, return the raw text with better structure
+				parsedAnalysis = {
+					rawAnalysis: analysisText,
+					error: 'Could not parse structured data',
+					// Try to extract basic info manually
+					extractedData: extractBasicData(analysisText || '')
+				};
+			}
 		}
 
 		return {

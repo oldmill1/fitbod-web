@@ -141,6 +141,170 @@
   margin-top: $spacing-sm;
 }
 
+// Analysis Results Styles
+.analysisResults {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+}
+
+.workoutCard {
+  background: $color-bg-secondary;
+  border-radius: $radius-xl;
+  padding: $spacing-xl;
+  border: 1px solid $color-border-primary;
+  transition: transform $transition-normal;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.workoutHeader {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+}
+
+.workoutTitle {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin: 0;
+}
+
+.workoutMeta {
+  display: flex;
+  gap: $spacing-lg;
+  flex-wrap: wrap;
+}
+
+.workoutDate,
+.workoutDuration {
+  background: $color-bg-tertiary;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.exercisesList {
+  margin-bottom: $spacing-lg;
+}
+
+.exercisesTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin: 0 0 $spacing-md 0;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1px solid $color-border-primary;
+}
+
+.exerciseCard {
+  background: $color-bg-tertiary;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  border-left: 4px solid $color-accent;
+}
+
+.exerciseName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.exerciseStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: $spacing-sm;
+}
+
+.exerciseStat {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+// Error Card
+.errorCard {
+  background: $color-bg-secondary;
+  border-radius: $radius-xl;
+  padding: $spacing-xl;
+  border: 1px solid $color-danger;
+  text-align: center;
+}
+
+.errorIcon {
+  font-size: 3rem;
+  margin-bottom: $spacing-md;
+}
+
+.errorTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-danger;
+  margin-bottom: $spacing-sm;
+}
+
+.errorMessage {
+  color: $color-text-secondary;
+  margin-bottom: $spacing-lg;
+}
+
+// Buttons
+.resetButton,
+.retryButton {
+  background: $color-accent;
+  color: white;
+  border: none;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-xl;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $transition-normal;
+  margin-top: $spacing-lg;
+
+  &:hover {
+    background: darken($color-accent, 10%);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.retryButton {
+  background: $color-danger;
+  margin-top: $spacing-md;
+
+  &:hover {
+    background: darken($color-danger, 10%);
+  }
+}
+
 .footer {
   color: $color-text-secondary;
   font-size: $font-size-sm;
@@ -152,6 +316,10 @@
 
 // Mobile responsiveness
 @media (max-width: $breakpoint-md) {
+  .uploadContainer {
+    padding: $spacing-lg;
+  }
+
   .uploadForm {
     width: $upload-form-size-mobile;
     height: 60vh;
@@ -160,5 +328,30 @@
 
   .header {
     font-size: 2.2rem;
+    padding: 1rem 0 2rem;
+  }
+
+  .analysisResults {
+    max-width: 100%;
+  }
+
+  .workoutCard {
+    padding: $spacing-lg;
+  }
+
+  .workoutMeta {
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+
+  .exerciseStats {
+    grid-template-columns: 1fr;
+    gap: $spacing-md;
+  }
+
+  .exerciseStat {
+    background: rgba($color-bg-primary, 0.5);
+    padding: $spacing-sm;
+    border-radius: $radius-sm;
   }
 }

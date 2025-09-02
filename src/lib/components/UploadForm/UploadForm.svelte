@@ -28,11 +28,10 @@
 
 			uploadResult = await response.json();
 
-			// Log the full response
+			// Keep console logging for debugging
 			console.log('=== UPLOAD RESPONSE ===');
 			console.log('Full response:', uploadResult);
 
-			// Log each file's analysis
 			if (uploadResult.files) {
 				uploadResult.files.forEach((file: any, index: number) => {
 					console.log(`=== FILE ${index + 1}: ${file.name} ===`);
@@ -42,30 +41,7 @@
 					if (file.analysis) {
 						console.log('=== AI ANALYSIS DATA ===');
 						console.log('Parsed analysis:', file.analysis);
-
-						// Log specific workout data if available
-						if (file.analysis.date) {
-							console.log('📅 Date:', file.analysis.date);
-						}
-						if (file.analysis.duration) {
-							console.log('⏱️ Duration:', file.analysis.duration);
-						}
-						if (file.analysis.exercises) {
-							console.log('💪 Exercises found:', file.analysis.exercises.length);
-							file.analysis.exercises.forEach((exercise: any, exIndex: number) => {
-								console.log(`  Exercise ${exIndex + 1}:`, exercise.name);
-								console.log(`    Highest Weight: ${exercise.highestWeight}`);
-								console.log(`    Volume: ${exercise.volume}`);
-								console.log(`    Estimated Strength: ${exercise.estimatedStrength}`);
-							});
-						}
 					}
-
-					if (file.rawResponse) {
-						console.log('=== RAW AI RESPONSE ===');
-						console.log(file.rawResponse);
-					}
-
 					console.log('========================');
 				});
 			}
@@ -136,6 +112,12 @@
 			handleClick();
 		}
 	}
+
+	// Reset upload to start over
+	function resetUpload() {
+		uploadResult = null;
+		selectedFiles = [];
+	}
 </script>
 
 <svelte:head>
@@ -146,61 +128,116 @@
 <div class={styles.uploadContainer}>
 	<h1 class={styles.header}>Upload Your<br /> Workout Summary</h1>
 
-	<div
-		class="{styles.uploadForm} {isDragOver ? styles.dragOver : ''}"
-		on:click={handleClick}
-		on:keydown={handleKeydown}
-		on:dragover={handleDragOver}
-		on:dragleave={handleDragLeave}
-		on:drop={handleDrop}
-		role="button"
-		tabindex="0"
-	>
-		<div class={styles.uploadPlaceholder}>
-			{#if uploading}
-				<div class={styles.placeholderText}>
-					<div class={styles.uploadIcon}>⏳</div>
-					<div>Uploading files...</div>
-				</div>
-			{:else if uploadResult}
-				<div class={styles.resultText}>
-					{#if uploadResult.success}
-						<div class={styles.successText}>
-							<div class={styles.uploadIcon}>✅</div>
-							<div>{uploadResult.message}</div>
-							<div style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.8;">
-								Check browser console for detailed analysis results!
+	{#if uploadResult && uploadResult.success && uploadResult.files}
+		<!-- Display Analysis Results -->
+		<div class={styles.analysisResults}>
+			{#each uploadResult.files as file}
+				{#if file.analysis && !file.analysis.error}
+					<div class={styles.workoutCard}>
+						<div class={styles.workoutHeader}>
+							<h2 class={styles.workoutTitle}>Workout Analysis</h2>
+							<div class={styles.workoutMeta}>
+								{#if file.analysis.date}
+									<span class={styles.workoutDate}>📅 {file.analysis.date}</span>
+								{/if}
+								{#if file.analysis.duration}
+									<span class={styles.workoutDuration}>⏱️ {file.analysis.duration}</span>
+								{/if}
 							</div>
-							{#if uploadResult.files}
-								<div class={styles.fileDetails}>
-									{#each uploadResult.files as file}
-										<div class={styles.fileDetail}>{file.message}</div>
-									{/each}
-								</div>
-							{/if}
 						</div>
-					{:else}
-						<div class={styles.errorText}>
-							<div class={styles.uploadIcon}>❌</div>
-							<div>{uploadResult.error}</div>
+
+						{#if file.analysis.exercises && file.analysis.exercises.length > 0}
+							<div class={styles.exercisesList}>
+								<h3 class={styles.exercisesTitle}>Exercises ({file.analysis.exercises.length})</h3>
+								{#each file.analysis.exercises as exercise, idx}
+									<div class={styles.exerciseCard}>
+										<div class={styles.exerciseName}>{exercise.name}</div>
+										<div class={styles.exerciseStats}>
+											{#if exercise.highestWeight && exercise.highestWeight !== 'not visible'}
+												<div class={styles.exerciseStat}>
+													<span class={styles.statLabel}>Highest Weight</span>
+													<span class={styles.statValue}>{exercise.highestWeight}</span>
+												</div>
+											{/if}
+											{#if exercise.volume && exercise.volume !== 'not visible'}
+												<div class={styles.exerciseStat}>
+													<span class={styles.statLabel}>Volume</span>
+													<span class={styles.statValue}>{exercise.volume}</span>
+												</div>
+											{/if}
+											{#if exercise.estimatedStrength && exercise.estimatedStrength !== 'not visible'}
+												<div class={styles.exerciseStat}>
+													<span class={styles.statLabel}>Est. Strength</span>
+													<span class={styles.statValue}>{exercise.estimatedStrength}</span>
+												</div>
+											{/if}
+										</div>
+									</div>
+								{/each}
+							</div>
+						{/if}
+
+						<div class={styles.fileName}>📄 {file.name}</div>
+					</div>
+				{:else}
+					<!-- Error display for failed analysis -->
+					<div class={styles.errorCard}>
+						<div class={styles.errorIcon}>❌</div>
+						<div class={styles.errorTitle}>Analysis Failed</div>
+						<div class={styles.errorMessage}>
+							{file.message || 'Could not analyze this workout image'}
 						</div>
-					{/if}
-				</div>
-			{:else if selectedFiles.length > 0}
-				<div class={styles.fileList}>
-					{#each selectedFiles as file}
-						<div class={styles.fileName}>{file.name}</div>
-					{/each}
-				</div>
-			{:else}
-				<div class={styles.placeholderText}>
-					<div class={styles.uploadIcon}>📸</div>
-					<div>Drop images here or click to select</div>
-					<div class={styles.supportedFormats}>PNG, JPG, JPEG supported</div>
-				</div>
-			{/if}
+						<div class={styles.fileName}>📄 {file.name}</div>
+					</div>
+				{/if}
+			{/each}
+
+			<!-- Reset button -->
+			<button class={styles.resetButton} on:click={resetUpload}>
+				Upload Another Workout
+			</button>
 		</div>
-	</div>
+	{:else}
+		<!-- Upload Form -->
+		<div
+			class="{styles.uploadForm} {isDragOver ? styles.dragOver : ''}"
+			on:click={handleClick}
+			on:keydown={handleKeydown}
+			on:dragover={handleDragOver}
+			on:dragleave={handleDragLeave}
+			on:drop={handleDrop}
+			role="button"
+			tabindex="0"
+		>
+			<div class={styles.uploadPlaceholder}>
+				{#if uploading}
+					<div class={styles.placeholderText}>
+						<div class={styles.uploadIcon}>⏳</div>
+						<div>Analyzing workout...</div>
+						<div style="font-size: 0.8rem; opacity: 0.7;">This may take a few seconds</div>
+					</div>
+				{:else if uploadResult && !uploadResult.success}
+					<div class={styles.errorText}>
+						<div class={styles.uploadIcon}>❌</div>
+						<div>{uploadResult.error}</div>
+						<button class={styles.retryButton} on:click={resetUpload}>Try Again</button>
+					</div>
+				{:else if selectedFiles.length > 0}
+					<div class={styles.fileList}>
+						{#each selectedFiles as file}
+							<div class={styles.fileName}>{file.name}</div>
+						{/each}
+					</div>
+				{:else}
+					<div class={styles.placeholderText}>
+						<div class={styles.uploadIcon}>📸</div>
+						<div>Drop images here or click to select</div>
+						<div class={styles.supportedFormats}>PNG, JPG, JPEG supported</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
 
 	<!-- Hidden file input -->
 	<input
