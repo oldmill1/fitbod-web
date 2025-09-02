@@ -60,7 +60,7 @@
 			console.log('=== UPLOAD RESPONSE ===');
 			console.log('Full response:', uploadResult);
 
-			if (uploadResult.files) {
+			if (uploadResult && uploadResult.files) {
 				uploadResult.files.forEach((file: any, index: number) => {
 					console.log(`=== FILE ${index + 1}: ${file.name} (${file.imageType}) ===`);
 					console.log('Analysis status:', file.status);
